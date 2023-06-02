@@ -1,0 +1,99 @@
+#include <iostream>  
+#include <stack>     // библиотека для работы со стаком(группирование обьектов)
+#include <string>    // библиотека для работы со строками
+#include <sstream>   // библиотека для работы с потоками строк
+
+using namespace std;
+
+// функция, которая возвращает приоритет оператора
+double priority(char op) {
+    if (op == '+' || op == '-') return 1;  // приоритет 1 для +/-
+    if (op == '*' || op == '/') return 2;  // приоритет 2 для *//
+    return 0;  // все остальные операторы имеют приоритет 0
+}
+
+// применяем оператор к двум операндам и возвращаем результат
+double applyOp(char op, double b, double a) {
+    switch (op) {
+        case '+': return a + b;  // сложение
+        case '-':return a - b;  // вычитание
+        case '*': return a * b;  // умножение
+        case '/': return a / b;  // деление
+    }
+    return 0;  // возвращаем ноль в случае некорректного оператора
+}
+
+// функция, которая вычисляет значение арифметического выражения в инфиксной форме
+double calculation(string expression) {
+    stack<double> values;  // стак для хранения операндов (чисел)
+    stack<char> ops;       // стак для хранения операторов
+    for (double i = 0; i < expression.length(); i++) {  // проходим по выражению слева направо
+        if (expression[i] == ' ') continue;  // если текущий символ пробел, пропускаем его
+
+        if (isdigit(expression[i])) {  // если текущий символ это цифра
+            double num = 0;
+            while (i < expression.length() && isdigit(expression[i])) {
+                num = num * 10 + (expression[i] - '0');  // извлекаем из выражения число и собираем его из отдельных цифр       
+                i++;
+            }
+            i--;
+            values.push(num);  // добавляем число в стак операндов
+        } else if (expression[i] == '(') {  // если текущий символ - открывающая скобка
+            ops.push(expression[i]);  // добавляем ее в стак операторов
+        } else if (expression[i] == ')'){  // если текущий символ - закрывающая скобка
+            while (ops.top() != '(') {  // извлекаем операторы из стака до открывающей скобки
+                double val2 = values.top();
+                values.pop();
+
+                double val1 = values.top();
+                values.pop();
+
+                char op = ops.top();
+                ops.pop();
+
+                values.push(applyOp(op, val2, val1));  // применяем оператор к операндам и добавляем результат в стек операндов
+            }
+            ops.pop();  // извлекаем из стака открывающую скобку
+        } else {  // если текущий символ - оператор
+            while (!ops.empty() && priority(ops.top()) >= priority(expression[i])) {  // извлекаем операторы из стака, пока приоритет текущего оператора нестановится больше, чем приоритет оператора на вершине стака, или пока стак операторов не станет пустым
+                double val2 = values.top();
+                values.pop();
+
+                double val1 = values.top();
+                values.pop();
+
+                char op = ops.top();
+                ops.pop();
+
+                values.push(applyOp(op, val2, val1));  // применяем оператор к операндам и добавляем результат в стак операндов
+            }
+            ops.push(expression[i]);  // добавляем текущий оператор в стак операторов
+        }
+    }
+    while (!ops.empty()) {  // если в стаке еще остались операторы
+        double val2 = values.top();
+        values.pop();
+
+        double val1 = values.top();
+        values.pop();
+
+        char op = ops.top();
+        ops.pop();
+
+        values.push(applyOp(op, val2, val1));  // применяем оператор к операндам и добавляем результат в стак операндов
+    }
+    return values.top();  // возвращаем результат вычисления, который находится на вершине стака операндов
+}
+ 
+//я наверное до этого дня,за всю жизнь не использовал столько раз слова "оператор" и "операнд"
+
+int main() {
+    string expression;
+    cout << "Введите выражение,что нужно вычислить: ";
+    getline(cin, expression);  //запрос на нужное пользователю выражение
+    double result = calculation(expression);  // вычисляем выражение с помощью функции как ни странно решения
+    cout << "Ответ: " << result << endl;  // вывод результата на экран
+    return 0;  //конец программы
+}
+
+
